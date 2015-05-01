@@ -1,20 +1,15 @@
 package com.FCI.SWE.ServicesModels;
 
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.Collections;
 import java.util.List;
-
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
+import java.util.Vector;
 
 import com.FCI.SWE.Models.User;
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
-import com.google.appengine.api.datastore.EntityNotFoundException;
 import com.google.appengine.api.datastore.FetchOptions;
-import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.PreparedQuery;
 import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.Transaction;
@@ -34,7 +29,7 @@ public class UserEntity {
 	private String email;
 	private String password;
 	private long id;
-
+	 
 	/**
 	 * Constructor accepts user data
 	 * 
@@ -49,6 +44,13 @@ public class UserEntity {
 		this.name = name;
 		this.email = email;
 		this.password = password;
+	}
+	public UserEntity() {
+		
+	}
+	
+	public void setemail(String Email){
+		email = Email;
 	}
 	
 	private void setId(long id){
@@ -133,15 +135,13 @@ public class UserEntity {
 		    }
 		}
 		return true;
-
 	}
 	
-	
-	public static boolean sendFriendReqest(String  Reciever)
+	public static boolean sendFriendReqest(String  Reciever, String Sender)
 	{
 		DatastoreService datastore = DatastoreServiceFactory
 				.getDatastoreService();
-		String Sender=User.getCurrentActiveUser().getEmail();
+		//String Sender=User.getCurrentActiveUser().getEmail();
 		Transaction txn = datastore.beginTransaction();
 		Query gaeQuery = new Query("RequestFriend");
 		PreparedQuery pq = datastore.prepare(gaeQuery);
@@ -182,10 +182,60 @@ public class UserEntity {
 				datastore.put(entity);
 
 				return "OK";
+				}
+		}
+		return "failed";
+	}
+	
+	
+	public static Vector<UserEntity>SearchUser(String uname)
+	{  Vector <UserEntity> users=new Vector <UserEntity>();
+		DatastoreService datastore = DatastoreServiceFactory
+				.getDatastoreService();
+		Query gaeQuery = new Query("users");
+		PreparedQuery pq = datastore.prepare(gaeQuery);
+		
+		for (Entity entity : pq.asIterable()) {
+			String currentName =entity.getProperty("name").toString();
+			if (currentName.contains(uname)){
+			UserEntity user = new UserEntity(entity.getProperty(
+						"name").toString(), entity.getProperty("email")
+						.toString(), entity.getProperty("password").toString());
+			user.setId(entity.getKey().getId());
+			users.add(user);
+
 			}
 		}
+		return users;
+		}
+	
+public static	void Update (String convid, String Receiverid,String notifyType){
+	DatastoreService datastore = DatastoreServiceFactory
+			.getDatastoreService();
+	Transaction txn = datastore.beginTransaction();
+	Query gaeQuery = new Query("Notification");
+	PreparedQuery pq = datastore.prepare(gaeQuery);
+	List<Entity> list = pq.asList(FetchOptions.Builder.withDefaults());
+	System.out.println("Size Notification= " + list.size());
+	
+	try {
+	Entity employee = new Entity("Notification", list.size() + 2);
 
-		return "failed";
+	employee.setProperty("ReceiverName", Receiverid);
+	employee.setProperty("ConvId_ReqSender",convid);
+//	employee.setProperty("MessageContent", msg);
+	employee.setProperty("NotifyType", notifyType);
+	datastore.put(employee);
+	
+	txn.commit();
+	}finally{
+		if (txn.isActive()) {
+	        txn.rollback();
+	    }
+	}
 	
 	}
+
+
+
 }

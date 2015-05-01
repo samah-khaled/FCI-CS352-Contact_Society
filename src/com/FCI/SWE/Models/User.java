@@ -8,7 +8,10 @@ import org.json.simple.parser.ParseException;
 public class User {
 	private long id;
 	private String name;
+	
+
 	private String email;
+	
 	private String password;
 	
 	private static User currentActiveUser;
@@ -30,10 +33,19 @@ public class User {
 
 	}
 	
+	public User() {
+		// TODO Auto-generated constructor stub
+	}
+
 	private void setId(long id){
 		this.id = id;
 	}
-	
+	public void setEmail(String email) {
+		this.email = email;
+	}
+	public void setName(String name) {
+		this.name = name;
+	}
 	public long getId(){
 		return id;
 	}
@@ -83,5 +95,20 @@ public class User {
 
 	}
 
+	public static User ParserUserInfo(String json)
+	{ JSONParser parser= new JSONParser();
+	try {
+		JSONObject object =(JSONObject) parser.parse(json);
+		User user =new User();
+		user.setEmail(object.get("email").toString());
+		user.setName(object.get("name").toString());
+return user;
+	} catch (ParseException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	}
+	return null;
 	
+		
+	}
 }
